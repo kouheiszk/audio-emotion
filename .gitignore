@@ -90,3 +90,8 @@ ENV/
 
 # Config
 config.json
+
+# Data
+data/*
+!data/.keep
+

@@ -13,7 +13,7 @@ log = logging.getLogger("audio_emotion")
 
 class Calibrater(object):
     CALIBRATION_TIME = 5  # 5sec
-    THRESHOLD = 1.25
+    THRESHOLD = 1.25  # キャリブレーション平均の25%以上の音量で反応
 
     def __init__(self):
         self.finished = False
@@ -40,13 +40,14 @@ class Calibrater(object):
 
 class Recorder(object):
     SILENT_SPLIT_DURATION = 1  # 1sec
+    MIN_AUDIO_LENGTH = 1.5  # 1.5sec以上じゃないと反応しなくすう
 
     def __init__(self):
         self.frames = []
         self.start_time = None
         self.finish_time = None
 
-    def record(self, samples, is_over_amplitude, channels, sampwidth, rate):
+    def record(self, samples, is_over_amplitude, channels, sample_size, rate):
         if is_over_amplitude:
             if self.start_time is None:
                 log.debug("Start recording...")
@@ -58,10 +59,10 @@ class Recorder(object):
             self.frames.append(samples)
 
         if self.finish_time and time.time() > self.finish_time:
-            filename = "{}.wav".format(int(self.start_time))
+            filename = "data/{}.wav".format(int(self.start_time))
             wf = wave.open(filename, "wb")
             wf.setnchannels(channels)
-            wf.setsampwidth(sampwidth)
+            wf.setsampwidth(sample_size)
             wf.setframerate(rate)
             wf.writeframes(b"".join(self.frames))
             wf.close()
@@ -74,11 +75,11 @@ class Recorder(object):
         pass
 
 
-class AudioManager(object):
-    FORMAT = pyaudio.paFloat32
-    CHANNELS = 1
+class AudioEmotion(object):
+    FORMAT = pyaudio.paInt16  # ビット/サンプル
+    CHANNELS = 1  # チャンネル数
     RATE = 44100  # 44.1kHz
-    FRAMES_PER_BUFFER = 512
+    FRAMES_PER_BUFFER = 4096
 
     def __init__(self):
         self.pa = pyaudio.PyAudio()
@@ -87,7 +88,7 @@ class AudioManager(object):
 
         atexit.register(self.pa.terminate)
 
-    def start_recording(self):
+    def analyze(self):
         self.recording = pyaudio.paContinue
         stream = self.pa.open(format=self.FORMAT,
                               channels=self.CHANNELS,
@@ -108,7 +109,7 @@ class AudioManager(object):
         stream.close()
 
     def _callback(self, in_data, frame_count, time_info, status):
-        data = np.fromstring(in_data, np.float32)
+        data = np.fromstring(in_data, np.int16)
         average = np.average(np.abs(data))
         if not self.calibrater.finished:
             self.calibrater.calibrate(average, self.RATE, self.FRAMES_PER_BUFFER)
@@ -117,7 +118,7 @@ class AudioManager(object):
             self.recorder.record(in_data,
                                  is_over_amplitude=is_over_amplitude,
                                  channels=self.CHANNELS,
-                                 sampwidth=self.pa.get_sample_size(self.FORMAT),
+                                 sample_size=self.pa.get_sample_size(self.FORMAT),
                                  rate=self.RATE)
 
         return (in_data, self.recording)
@@ -127,8 +128,8 @@ def main():
     # ログフォーマットの設定
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(module)10s] [%(levelname)5s] %(message)s')
 
-    am = AudioManager()
-    am.start_recording()
+    aem = AudioEmotion()
+    aem.analyze()
 
 
 # def main():
