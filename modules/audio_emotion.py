@@ -6,8 +6,9 @@ import logging
 import pyaudio
 import time
 
+from modules.audio_detecter import AudioDetector
+from modules.audio_recorder import AudioRecorder
 from modules.calibrater import Calibrater
-from modules.recorder import Recorder
 
 log = logging.getLogger("audio_emotion")
 
@@ -22,7 +23,8 @@ class AudioEmotion(object):
 
     def __init__(self):
         self.calibrater = Calibrater()
-        self.recorder = Recorder()
+        self.recorder = AudioRecorder()
+        self.detector = AudioDetector()
         self.sample_size = 2  # 16bits
 
     def analyze(self):
@@ -74,6 +76,7 @@ class AudioEmotion(object):
                                         buffer=self.CHUNK)
 
         if filename:
-            log.debug(filename)
+            phrase = self.detector.decode_phrase(filename)
+            self.recorder.remove(filename)
 
-        return (data, self.recording)
+        return data, self.recording

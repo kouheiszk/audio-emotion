@@ -1,13 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import logging
+import os
 import time
 import wave
 
 log = logging.getLogger("audio_emotion")
 
 
-class Recorder(object):
+class AudioRecorder(object):
     SILENT_SPLIT_DURATION = 1  # 1sec
     MIN_AUDIO_LENGTH = 0.2  # 0.2sec以上じゃないと反応しなくする
 
@@ -48,3 +49,6 @@ class Recorder(object):
             self.finish_time = None
 
         return filename
+
+    def remove(self, filename):
+        os.remove(filename)
