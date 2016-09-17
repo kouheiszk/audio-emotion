@@ -9,6 +9,7 @@ import time
 from modules.audio_detecter import AudioDetector
 from modules.audio_recorder import AudioRecorder
 from modules.calibrater import Calibrater
+from modules.sentiment_detecter import SentimentDetector
 
 log = logging.getLogger("audio_emotion")
 
@@ -24,7 +25,8 @@ class AudioEmotion(object):
     def __init__(self):
         self.calibrater = Calibrater()
         self.recorder = AudioRecorder()
-        self.detector = AudioDetector()
+        self.audio_detector = AudioDetector()
+        self.sentiment_detector = SentimentDetector
         self.sample_size = 2  # 16bits
 
     def analyze(self):
@@ -76,8 +78,14 @@ class AudioEmotion(object):
                                         buffer=self.CHUNK)
 
         if filename:
-            phrase = self.detector.transcribe_audio(filename)
-            log.debug(phrase)
+            phrase = self.audio_detector.transcribe_audio(filename)
+            emotion = self.sentiment_detector.analyze_text(phrase)
+
+            log.debug(emotion)
+            log.debug(emotion.to_emoticon)
+
+            # TODO ディスプレイに表示
+
             self.recorder.remove(filename)
 
         return data, self.recording
