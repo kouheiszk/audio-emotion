@@ -40,14 +40,16 @@ class Calibrater(object):
 
 class Recorder(object):
     SILENT_SPLIT_DURATION = 1  # 1sec
-    MIN_AUDIO_LENGTH = 0.2  # 0.2sec以上じゃないと反応しなくする
+    MIN_AUDIO_LENGTH = 0.5  # 0.5sec以上じゃないと反応しなくする
 
     def __init__(self):
         self.frames = []
         self.start_time = None
         self.finish_time = None
 
-    def record(self, samples, is_over_amplitude, channels, sample_size, rate):
+    def record(self, samples, is_over_amplitude, channels, sample_size, rate, buffer):
+        filename = None
+
         if is_over_amplitude:
             if self.start_time is None:
                 log.debug("Start recording...")
@@ -65,16 +67,18 @@ class Recorder(object):
                 wf.setnchannels(channels)
                 wf.setsampwidth(sample_size)
                 wf.setframerate(rate)
-                wf.writeframes(b"".join(self.frames))
+                wf.writeframes(b"".join(self.frames[0:-1 * int(self.SILENT_SPLIT_DURATION * rate / buffer)]))
                 wf.close()
 
                 log.debug("Finish recording, Write audio : {}".format(filename))
+            else:
+                log.debug("Too short...")
 
             self.frames = []
             self.start_time = None
             self.finish_time = None
 
-        pass
+        return filename
 
 
 class AudioEmotion(object):
@@ -114,14 +118,22 @@ class AudioEmotion(object):
         data = np.fromstring(in_data, np.int16)
         average = np.average(np.abs(data))
         if not self.calibrater.finished:
-            self.calibrater.calibrate(average, self.RATE, self.FRAMES_PER_BUFFER)
+            # キャリブレーションを行う
+            self.calibrater.calibrate(average,
+                                      rate=self.RATE,
+                                      buffer=self.FRAMES_PER_BUFFER)
         else:
+            # レコーディングを行う
             is_over_amplitude = self.calibrater.is_over_amplitude(average)
-            self.recorder.record(in_data,
-                                 is_over_amplitude=is_over_amplitude,
-                                 channels=self.CHANNELS,
-                                 sample_size=self.pa.get_sample_size(self.FORMAT),
-                                 rate=self.RATE)
+            filename = self.recorder.record(in_data,
+                                            is_over_amplitude=is_over_amplitude,
+                                            channels=self.CHANNELS,
+                                            sample_size=self.pa.get_sample_size(self.FORMAT),
+                                            rate=self.RATE,
+                                            buffer=self.FRAMES_PER_BUFFER)
+
+            if filename:
+                print("{}".format(filename))
 
         return (in_data, self.recording)
 
