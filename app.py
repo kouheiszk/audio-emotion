@@ -40,7 +40,7 @@ class Calibrater(object):
 
 class Recorder(object):
     SILENT_SPLIT_DURATION = 1  # 1sec
-    MIN_AUDIO_LENGTH = 1.5  # 1.5sec以上じゃないと反応しなくすう
+    MIN_AUDIO_LENGTH = 0.2  # 0.2sec以上じゃないと反応しなくする
 
     def __init__(self):
         self.frames = []
@@ -51,24 +51,26 @@ class Recorder(object):
         if is_over_amplitude:
             if self.start_time is None:
                 log.debug("Start recording...")
-                self.start_time = time.time()
                 self.frames = []
+                self.start_time = time.time()
             self.finish_time = time.time() + 1.0
 
         if self.start_time and self.finish_time:
             self.frames.append(samples)
 
         if self.finish_time and time.time() > self.finish_time:
-            filename = "data/{}.wav".format(int(self.start_time))
-            wf = wave.open(filename, "wb")
-            wf.setnchannels(channels)
-            wf.setsampwidth(sample_size)
-            wf.setframerate(rate)
-            wf.writeframes(b"".join(self.frames))
-            wf.close()
+            if time.time() > self.start_time + self.SILENT_SPLIT_DURATION + self.MIN_AUDIO_LENGTH:
+                filename = "data/{}.wav".format(int(self.start_time))
+                wf = wave.open(filename, "wb")
+                wf.setnchannels(channels)
+                wf.setsampwidth(sample_size)
+                wf.setframerate(rate)
+                wf.writeframes(b"".join(self.frames))
+                wf.close()
 
-            log.debug("Finish recording, Write audio : {}".format(filename))
+                log.debug("Finish recording, Write audio : {}".format(filename))
 
+            self.frames = []
             self.start_time = None
             self.finish_time = None
 
