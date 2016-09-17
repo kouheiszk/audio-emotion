@@ -76,7 +76,8 @@ class AudioEmotion(object):
                                         buffer=self.CHUNK)
 
         if filename:
-            phrase = self.detector.decode_phrase(filename)
+            phrase = self.detector.transcribe_audio(filename)
+            log.debug(phrase)
             self.recorder.remove(filename)
 
         return data, self.recording
