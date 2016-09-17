@@ -40,7 +40,7 @@ class Calibrater(object):
 
 class Recorder(object):
     SILENT_SPLIT_DURATION = 1  # 1sec
-    MIN_AUDIO_LENGTH = 0.5  # 0.5sec以上じゃないと反応しなくする
+    MIN_AUDIO_LENGTH = 0.2  # 0.2sec以上じゃないと反応しなくする
 
     def __init__(self):
         self.frames = []
@@ -96,6 +96,7 @@ class AudioEmotion(object):
 
     def analyze(self):
         self.recording = pyaudio.paContinue
+
         stream = self.pa.open(format=self.FORMAT,
                               channels=self.CHANNELS,
                               rate=self.RATE,
@@ -113,6 +114,8 @@ class AudioEmotion(object):
 
         stream.stop_stream()
         stream.close()
+
+        self.pa.terminate()
 
     def _callback(self, in_data, frame_count, time_info, status):
         data = np.fromstring(in_data, np.int16)
