@@ -16,10 +16,10 @@ class Recorder(object):
         self.start_time = None
         self.finish_time = None
 
-    def record(self, samples, is_over_amplitude, channels, sample_size, rate, buffer):
+    def record(self, samples, is_over_threshold, channels, sample_size, rate, buffer):
         filename = None
 
-        if is_over_amplitude:
+        if is_over_threshold:
             if self.start_time is None:
                 log.debug("Start recording...")
                 self.frames = []
@@ -36,7 +36,7 @@ class Recorder(object):
                 wf.setnchannels(channels)
                 wf.setsampwidth(sample_size)
                 wf.setframerate(rate)
-                wf.writeframes(b"".join(self.frames[0:-1 * int(self.SILENT_SPLIT_DURATION * rate / buffer)]))
+                wf.writeframes(b"".join(self.frames[0:-1 * int(self.SILENT_SPLIT_DURATION * rate / buffer / 2)]))
                 wf.close()
 
                 log.debug("Finish recording, Write audio : {}".format(filename))

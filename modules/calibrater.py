@@ -2,31 +2,41 @@
 # -*- coding: utf-8 -*-
 import logging
 
+import math
+
+import audioop
+import pyaudio
+
 log = logging.getLogger("audio_emotion")
 
 
 class Calibrater(object):
-    CALIBRATION_TIME = 5  # 5sec
-    THRESHOLD = 1.25  # キャリブレーション平均の25%以上の音量で反応
+    THRESHOLD_RATE = 1.20
 
     def __init__(self):
-        self.finished = False
-        self.base = None
-        self.averages = []
+        self.threshold = 450
 
-    def calibrate(self, average, rate, buffer):
-        if not self.finished:
-            needs = self.CALIBRATION_TIME * rate / buffer
+    def calibrate(self, chunk, format, channels, rate, num_samples=50):
+        log.debug("Getting intensity values from mic.")
 
-            if len(self.averages) == 0:
-                log.debug("Start calibration...")
+        p = pyaudio.PyAudio()
+        stream = p.open(format=format,
+                        channels=channels,
+                        rate=rate,
+                        input=True,
+                        frames_per_buffer=chunk)
 
-            self.averages.append(average)
+        values = [math.sqrt(abs(audioop.avg(stream.read(chunk), 4))) for x in range(num_samples)]
+        values = sorted(values, reverse=True)
+        r = sum(values[:int(num_samples * 0.2)]) / int(num_samples * 0.2)
 
-            if len(self.averages) >= needs:
-                log.debug("Finish calibration.")
-                self.finished = True
-                self.base = sum(self.averages) / needs
+        log.debug("Finished")
+        log.debug("Average audio intensity is {}".format(r))
 
-    def is_over_amplitude(self, average):
-        return average > self.base * self.THRESHOLD
+        stream.close()
+        p.terminate()
+
+        self.threshold = r * self.THRESHOLD_RATE
+
+    def is_over_threshold(self, data):
+        return math.sqrt(abs(audioop.avg(data, 4))) >= self.threshold
