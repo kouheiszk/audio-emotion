@@ -26,5 +26,5 @@ class SentimentDetector(object):
         else:
             emotion = Emotion.OTHER
             log.debug("Invalid phrase.")
-            
+
         return emotion

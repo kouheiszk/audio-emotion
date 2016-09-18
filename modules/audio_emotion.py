@@ -8,7 +8,7 @@ import time
 
 from modules.audio_detecter import AudioDetector
 from modules.audio_recorder import AudioRecorder
-from modules.calibrater import Calibrater
+from modules.audio_calibrater import AudioCalibrater
 from modules.sentiment_detecter import SentimentDetector
 
 log = logging.getLogger("audio_emotion")
@@ -23,7 +23,7 @@ class AudioEmotion(object):
     PREV_AUDIO = 0.5
 
     def __init__(self):
-        self.calibrater = Calibrater()
+        self.calibrater = AudioCalibrater()
         self.recorder = AudioRecorder()
         self.audio_detector = AudioDetector()
         self.sentiment_detector = SentimentDetector()
