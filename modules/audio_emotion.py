@@ -85,7 +85,6 @@ class AudioEmotion(object):
     def _callback(self, data, frame_count, time_info, status):
         is_over_threshold = self.calibrater.is_over_threshold(data)
         self.slid_win.append(1 if is_over_threshold else 0)
-        log.debug(self.slid_win)
 
         if sum([x for x in self.slid_win]) > 1:
             if not self.started:
