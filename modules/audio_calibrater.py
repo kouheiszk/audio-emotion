@@ -16,7 +16,7 @@ class AudioCalibrater(object):
     def __init__(self):
         self.threshold = 450
 
-    def calibrate(self, chunk, format, channels, rate, num_samples=50):
+    def calibrate(self, format, channels, rate, chunk, num_samples=50):
         log.debug("Start calibration, Getting intensity values from mic...")
 
         p = pyaudio.PyAudio()
