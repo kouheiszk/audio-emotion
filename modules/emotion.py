@@ -17,14 +17,28 @@ class Emotion(enum.Enum):
 
     def to_emoticon(self):
         if self == Emotion.OTHER:
-            random.choice(["(・∀・)", "(・∀・)"])
+            return random.choice(["(・∀・)", "(・∀・)"])
         elif self == Emotion.JOY:
-            random.choice(["(*´ω｀*)", "(*´ω｀*)"])
+            return random.choice(["(*´ω｀*)", "(*´ω｀*)"])
         elif self == Emotion.ANGER:
-            random.choice(["(# ﾟДﾟ)", "(# ﾟДﾟ)"])
+            return random.choice(["(# ﾟДﾟ)", "(# ﾟДﾟ)"])
         elif self == Emotion.SADNESS:
-            random.choice(["(´；ω；｀)", "(´；ω；｀)"])
+            return random.choice(["(´；ω；｀)", "(´；ω；｀)"])
         elif self == Emotion.HAPPY:
-            random.choice(["(*´∀｀*)", "(*´∀｀*)"])
+            return random.choice(["(*´∀｀*)", "(*´∀｀*)"])
         else:
             return ""
+
+    def __str__(self):
+        if self == Emotion.OTHER:
+            return "その他"
+        elif self == Emotion.JOY:
+            return "喜"
+        elif self == Emotion.ANGER:
+            return "怒"
+        elif self == Emotion.SADNESS:
+            return "哀"
+        elif self == Emotion.HAPPY:
+            return "楽"
+        else:
+            return "ERROR"

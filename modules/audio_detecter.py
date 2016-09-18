@@ -15,13 +15,21 @@ class AudioDetector(object):
                                            password=config.speech_to_text["password"])
 
     def transcribe_audio(self, filename):
+        log.debug("Start transcribing audio : {}".format(filename))
+
         with open(filename, "rb") as wave_file:
             response = self.speech_to_text.recognize(wave_file,
                                                      content_type="audio/wav",
                                                      model="ja-JP_BroadbandModel")
 
-            result = response.get("results", [{}])[0]
-            alternative = result.get("alternatives", [{}])[0]
-            transcript = alternative.get("transcript", "")
+            phrase = ""
+            results = response.get("results", [])
+            if results:
+                alternatives = results[0].get("alternatives", [])
+                if alternatives:
+                    phrase = alternatives[0].get("transcript", "").replace(" ", "")
+                    log.debug("Transcribed : 「{}」".format(phrase))
+            else:
+                log.debug("Invalid response format : {}".format(response))
 
-            return transcript.replace(" ", "")
+            return phrase

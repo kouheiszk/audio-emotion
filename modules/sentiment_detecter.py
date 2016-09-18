@@ -16,8 +16,15 @@ class SentimentDetector(object):
                                              password=config.natural_language_classifier["password"])
 
     def analyze_text(self, phrase):
-        response = self.nlc.classify(config.natural_language_classifier["classifier_id"], phrase)
 
-        classes = [Emotion(klass["class_name"]) for klass in response.get("classes", [])] or [Emotion.OTHER]
+        if phrase:
+            response = self.nlc.classify(config.natural_language_classifier["classifier_id"], phrase)
 
-        return classes[0]
+            classes = [Emotion(klass["class_name"]) for klass in response.get("classes", [])] or [Emotion.OTHER]
+            emotion = classes[0] or Emotion.OTHER
+            log.debug("Detect emotion : {}".format(emotion))
+        else:
+            emotion = Emotion.OTHER
+            log.debug("Invalid phrase.")
+            
+        return emotion

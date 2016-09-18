@@ -26,7 +26,7 @@ class AudioEmotion(object):
         self.calibrater = Calibrater()
         self.recorder = AudioRecorder()
         self.audio_detector = AudioDetector()
-        self.sentiment_detector = SentimentDetector
+        self.sentiment_detector = SentimentDetector()
         self.sample_size = 2  # 16bits
 
     def analyze(self):
@@ -81,10 +81,8 @@ class AudioEmotion(object):
             phrase = self.audio_detector.transcribe_audio(filename)
             emotion = self.sentiment_detector.analyze_text(phrase)
 
-            log.debug(emotion)
-            log.debug(emotion.to_emoticon)
-
             # TODO ディスプレイに表示
+            log.debug(emotion.to_emoticon())
 
             self.recorder.remove(filename)
 
