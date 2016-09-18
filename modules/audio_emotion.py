@@ -12,6 +12,7 @@ import time
 
 from modules.audio_detecter import AudioDetector
 from modules.audio_calibrater import AudioCalibrater
+from modules.liquid_crystal import LiquidCrystal
 from modules.sentiment_detecter import SentimentDetector
 
 log = logging.getLogger("audio_emotion")
@@ -30,6 +31,7 @@ class AudioEmotion(object):
         self.audio_detector = AudioDetector()
         self.sentiment_detector = SentimentDetector()
         self.sample_size = 2  # 16bits
+        self.lcd = LiquidCrystal(20, 16, 2, 3, 4, 17)
 
     def analyze(self):
         self.recording = pyaudio.paContinue
@@ -86,23 +88,23 @@ class AudioEmotion(object):
         is_over_threshold = self.calibrater.is_over_threshold(data)
         self.slid_win.append(1 if is_over_threshold else 0)
 
-        if sum([x for x in self.slid_win]) > 1:
+        # 閾値超えてるかどうか表示、デバッグ用
+        log.debug(self.slid_win)
+
+        if sum([x for x in self.slid_win]) > 0:
             if not self.started:
                 log.debug("Start recording...")
                 self.started = True
             self.frames.append(data)
 
         elif self.started:
-            # 発話開始から PREV_AUDIO[sec] 前も解析に含める
-            samples = list(self.prev_audios) + self.frames[0:-1 * int(self.SILENCE_LIMIT * self.RATE / self.CHUNK / 2)]
-
             # ファイル書き出し
             filename = "data/{}.wav".format(int(time.time()))
             wf = wave.open(filename, "wb")
             wf.setnchannels(self.CHANNELS)
             wf.setsampwidth(self.sample_size)
             wf.setframerate(self.RATE)
-            wf.writeframes(b"".join(samples))
+            wf.writeframes(b"".join(list(self.prev_audios) + self.frames))
             wf.close()
             log.debug("Finish recording, Write audio : {}".format(filename))
 
@@ -112,8 +114,13 @@ class AudioEmotion(object):
             # テキスト -> 感情
             emotion = self.sentiment_detector.analyze_text(phrase)
 
-            # TODO ディスプレイに表示
-            log.debug(emotion.to_emoticon())
+            # ディスプレイに表示
+            emoticon = emotion.to_emoticon()
+            log.debug("Emoticon : {}".format(emoticon))
+
+            self.lcd.clear()
+            self.lcd.setCursor(0, 0)
+            self.lcd.write(emoticon)
 
             # ファイル削除
             os.remove(filename)

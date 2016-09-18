@@ -33,3 +33,6 @@ class AudioDetector(object):
                 log.debug("Audio has no voice content")
 
             return phrase
+
+    def transcribe_audio_by_google(self, filename):
+       pass

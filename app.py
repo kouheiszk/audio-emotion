@@ -1,8 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import logging
+# import webiopi
 
 from modules.audio_emotion import AudioEmotion
+
+# from modules.liquid_crystal import LiquidCrystal
 
 log = logging.getLogger("audio_emotion")
 
@@ -16,4 +19,6 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
+else:
     main()
